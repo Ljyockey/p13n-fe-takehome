@@ -39,7 +39,10 @@ class ViewReporter {
       const elementHeight = element.clientHeight;
 
       if (this.isElementInViewport(elementBoundingCoordinates, elementHeight, viewportHeight)) {
-        const viewPercentage = (viewportHeight - elementBoundingCoordinates.top) / elementHeight;
+        const viewPercentage = elementBoundingCoordinates.top >= 0
+          ? (viewportHeight - elementBoundingCoordinates.top) / elementHeight
+          : elementBoundingCoordinates.bottom / elementHeight;
+
         this.logElementView(viewPercentage, element.id);
       }
     }
@@ -48,8 +51,19 @@ class ViewReporter {
   isElementInViewport (elementBoundingCoordinates, elementHeight, viewportHeight) {
     return (
       elementBoundingCoordinates &&
-      (elementBoundingCoordinates.top >= (elementHeight * -1)) &&
-      (elementBoundingCoordinates.bottom <= viewportHeight + elementHeight)
+      this.isTopInView(elementBoundingCoordinates.top, elementHeight) &&
+      this.isBottomInView(elementBoundingCoordinates.bottom, elementHeight, viewportHeight)
+    );
+  }
+
+  isTopInView (topCoordinate, elementHeight) {
+    return topCoordinate > (elementHeight * -1);
+  }
+
+  isBottomInView (bottomCoordinate, elementHeight, viewportHeight) {
+    return (
+      bottomCoordinate < (viewportHeight + elementHeight) &&
+      bottomCoordinate > (elementHeight * -1)
     );
   }
 
