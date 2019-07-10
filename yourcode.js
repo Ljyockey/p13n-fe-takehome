@@ -41,19 +41,19 @@ class ViewVerifier {
   logElementView (viewPercentage, elementId) {
     const elementStatus = this.elementTracker.find(e => e.id === elementId);
 
-    if (viewPercentage && elementStatus && !elementStatus.hasBeenVisible) {
+    if (elementStatus && !elementStatus.hasBeenVisible) {
       console.log(`Column with id: ${elementId} started to become visible on the page.`);
       elementStatus.hasBeenVisible = true;
     }
 
-    if (viewPercentage >= .5 && elementStatus && !elementStatus.hasBeenHalfVisible) {
+    if (elementStatus && viewPercentage >= .5 && !elementStatus.hasBeenHalfVisible) {
       console.log(`Column with id: ${elementId} is now more than 50% visible on the page.`);
       elementStatus.hasBeenHalfVisible = true;
     }
 
     if (elementStatus && viewPercentage >= 1) {
       console.log(`Column with id: ${elementId} is now fully visible on the page.`);
-      const elementStatusIndex = this.elementTracker.findIndex(e => e.id === elementId);
+      const elementStatusIndex = this.elementTracker.indexOf(elementStatus);
       this.elementTracker.splice(elementStatusIndex, 1);
     }
   }
