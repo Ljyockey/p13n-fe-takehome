@@ -61,6 +61,11 @@ class ViewReporter {
   }
 
   isBottomInView (bottomCoordinate, elementHeight, viewportHeight) {
+    /*
+      The instructions asked for when the top of the element comes into view,
+      but many browsers remember scroll postition and this feature may seem broken
+      if we don't also account for the bottom of the element coming into view.
+    */
     return (
       bottomCoordinate < (viewportHeight + elementHeight) &&
       bottomCoordinate > (elementHeight * -1)
