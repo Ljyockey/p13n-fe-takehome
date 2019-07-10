@@ -1,33 +1,48 @@
+// Submitted by Leo Yockey
 'use strict';
 
-class ViewVerifier {
+class ViewReporter {
   constructor (targetClassName) {
-    const targetElements = [...document.getElementsByClassName(targetClassName)];
-    const elementTracker = targetElements.map(element => ({
-      id: element.id,
-      hasBeenVisible: false,
-      hasBeenHalfVisible: false
-    }));
+    const targetElements = document.getElementsByClassName(targetClassName);
+    const targetElementsState = {};
 
-    this.elementTracker = elementTracker;
-    this.targetElements = targetElements;
+    for (let i in targetElements) {
+      const element = targetElements[i];
+      if (typeof element !== 'object') continue;
+
+      targetElementsState[element.id] = {
+        hasBeenVisible: false,
+        hasBeenHalfVisible: false,
+        element: element
+      };
+    }
+
+    this.targetElementsState = targetElementsState;
     this.processTargetElements = this.processTargetElements.bind(this);
+    this.addReporter();
+  }
+
+  addReporter () {
     this.processTargetElements();
     document.addEventListener('scroll', this.processTargetElements);
   }
 
+  removeReporter () {
+    document.removeEventListener('scroll', this.processTargetElements);
+  }
+
   processTargetElements () {
     const viewportHeight = window.innerHeight;
-
-    this.targetElements.forEach((element) => {
+    for (let i in this.targetElementsState) {
+      const element = this.targetElementsState[i].element;
       const elementBoundingCoordinates = element.getClientRects()[0];
       const elementHeight = element.clientHeight;
 
       if (this.isElementInViewport(elementBoundingCoordinates, elementHeight, viewportHeight)) {
-        let viewPercentage = (viewportHeight - elementBoundingCoordinates.top) / elementHeight;
+        const viewPercentage = (viewportHeight - elementBoundingCoordinates.top) / elementHeight;
         this.logElementView(viewPercentage, element.id);
       }
-    });
+    }
   }
 
   isElementInViewport (elementBoundingCoordinates, elementHeight, viewportHeight) {
@@ -39,25 +54,25 @@ class ViewVerifier {
   }
 
   logElementView (viewPercentage, elementId) {
-    const elementStatus = this.elementTracker.find(e => e.id === elementId);
+    const element = this.targetElementsState[elementId];
 
-    if (elementStatus && !elementStatus.hasBeenVisible) {
+    if (element && !element.hasBeenVisible) {
       console.log(`Column with id: ${elementId} started to become visible on the page.`);
-      elementStatus.hasBeenVisible = true;
+      element.hasBeenVisible = true;
     }
 
-    if (elementStatus && viewPercentage >= .5 && !elementStatus.hasBeenHalfVisible) {
+    if (element && viewPercentage >= .5 && !element.hasBeenHalfVisible) {
       console.log(`Column with id: ${elementId} is now more than 50% visible on the page.`);
-      elementStatus.hasBeenHalfVisible = true;
+      element.hasBeenHalfVisible = true;
     }
 
-    if (elementStatus && viewPercentage >= 1) {
+    if (element && viewPercentage >= 1) {
       console.log(`Column with id: ${elementId} is now fully visible on the page.`);
-      const elementStatusIndex = this.elementTracker.indexOf(elementStatus);
-      this.elementTracker.splice(elementStatusIndex, 1);
+      delete this.targetElementsState[elementId];
+      if (Object.keys(this.targetElementsState).length === 0) this.removeReporter();
     }
   }
 
 }
 
-new ViewVerifier('column');
+new ViewReporter('column');
